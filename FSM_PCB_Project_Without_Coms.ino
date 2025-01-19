@@ -21,9 +21,9 @@ const int MiCS6814Pin_NH3 = 45; // MiCS6814 analog pin
 
 
 // Thresholds
-const int MICS6814_CO_THRESHOLD = 200;     // Threshold for MiCS6814 CO in ppm : physical symptoms after 2-3 hours
-const int MICS6814_NO2_THRESHOLD = 100;    // Threshold for MiCS6814 NO2
-const int MICS6814_NH3_THRESHOLD = 600;    // Threshold for MiCS6814 NH3
+const int MICS6814_CO_THRESHOLD = 3.5;     // Threshold for MiCS6814 CO in ppm : values retreived from WHO
+const int MICS6814_NO2_THRESHOLD = 0.015;    // Threshold for MiCS6814 NO2 in ppm : values retreived from WHO
+const int MICS6814_NH3_THRESHOLD = 0.57;    // Threshold for MiCS6814 NH3 : values retreived from oizom, a NH3 monitoring sensor manufacturer
 
 // Variables
 unsigned long previousMillis = 0;
@@ -76,6 +76,8 @@ void detectingState() {
 
     // Read sensors
     int mq135Value = digitalRead(MQ135Pin); // Once the sensor is calibrated
+    //int mq135Value =  mq135_sensor.getPPM(); //To calibrate
+
     int mics6814Value_CO = analogRead(MiCS6814Pin_CO);
     int mics6814Value_NO2 = analogRead(MiCS6814Pin_NO2);
     int mics6814Value_NH3 = analogRead(MiCS6814Pin_NH3);
