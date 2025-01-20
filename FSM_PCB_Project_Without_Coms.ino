@@ -2,7 +2,15 @@
 #include <Wire.h>
 #include "Adafruit_CCS811.h"
 #include <MQ135.h>
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+#include "BluetoothSerial.h"
+#include "MICS6814.h"
 
+#if (!defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED))
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
 // Define FSM states
 enum State {
   IDLE,
@@ -11,7 +19,7 @@ enum State {
 };
 
 State currentState = IDLE;
-
+BluetoothSerial SerialBT;
 // Pin definitions
 const int actuatorPin = 48; // Passive buzzer + fan pin
 const int MQ135Pin = 13;    // MQ135 digital pin previously calibrated via the potentiometer
@@ -24,16 +32,19 @@ const int MiCS6814Pin_NH3 = 45; // MiCS6814 analog pin
 const int MICS6814_CO_THRESHOLD = 3.5;     // Threshold for MiCS6814 CO in ppm : values retreived from WHO
 const int MICS6814_NO2_THRESHOLD = 0.015;    // Threshold for MiCS6814 NO2 in ppm : values retreived from WHO
 const int MICS6814_NH3_THRESHOLD = 0.57;    // Threshold for MiCS6814 NH3 : values retreived from oizom, a NH3 monitoring sensor manufacturer
+//For the previously calibrated CO2 sensor MQ135 we put a threshold for digital state of 1000 ppm 
+//(values retrieved from haut conseil de la santé publique)
 
 // Variables
 unsigned long previousMillis = 0;
 const unsigned long interval = 5000; // 5 seconds interval
 MQ135 mq135_sensor(MQ135Pin);
+MICS6814 gas(MiCS6814Pin_CO, MiCS6814Pin_NO2, MiCS6814Pin_NH3);
 
 void setup() {
   // Initialize serial communication
-  Serial.begin(9600);
-
+  Serial.begin(115200);
+  SerialBT.begin("ESP32BT");
   // Initialize pins
   pinMode(actuatorPin, OUTPUT);
   pinMode(MQ135Pin, INPUT);
@@ -76,11 +87,11 @@ void detectingState() {
 
     // Read sensors
     int mq135Value = digitalRead(MQ135Pin); // Once the sensor is calibrated
-    //int mq135Value =  mq135_sensor.getPPM(); //To calibrate
+    //int mq135Value =  mq135_sensor.getPPM(); //To calibrate for co2 values
 
-    int mics6814Value_CO = analogRead(MiCS6814Pin_CO);
-    int mics6814Value_NO2 = analogRead(MiCS6814Pin_NO2);
-    int mics6814Value_NH3 = analogRead(MiCS6814Pin_NH3);
+    int mics6814Value_CO = gas.measure(CO);
+    int mics6814Value_NO2 = gas.measure(NO2);
+    int mics6814Value_NH3 = gas.measure(NH3);
 
     // Log sensor readings
     Serial.print("MQ135 Value: ");
@@ -102,9 +113,11 @@ void detectingState() {
   }
 }
 
-// ALARM state: Trigger alarm and notify via Serial
+// ALARM state: Trigger alarm and notify via Bluetooth
 void alarmState() {
   digitalWrite(actuatorPin, HIGH); // Activate buzzer and fan
   Serial.println("ALARM: Hazardous gas levels detected!");
-  
+  if (Serial.available()) {
+    SerialBT.print("ALARM: Hazardous gas levels detected!");
+  }
 }
