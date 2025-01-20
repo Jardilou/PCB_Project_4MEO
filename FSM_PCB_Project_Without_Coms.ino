@@ -5,12 +5,8 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
-#include "BluetoothSerial.h"
 #include "MICS6814.h"
 
-#if (!defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED))
-#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-#endif
 // Define FSM states
 enum State {
   IDLE,
@@ -113,11 +109,9 @@ void detectingState() {
   }
 }
 
-// ALARM state: Trigger alarm and notify via Bluetooth
+// ALARM state: Trigger alarm and notify via Serial Monitor
 void alarmState() {
   digitalWrite(actuatorPin, HIGH); // Activate buzzer and fan
   Serial.println("ALARM: Hazardous gas levels detected!");
-  if (Serial.available()) {
-    SerialBT.print("ALARM: Hazardous gas levels detected!");
-  }
+  
 }
