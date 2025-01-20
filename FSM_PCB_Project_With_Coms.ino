@@ -29,9 +29,10 @@ const int MiCS6814Pin_NH3 = 45; // MiCS6814 analog pin
 
 
 // Thresholds
-const int MICS6814_CO_THRESHOLD = 3.5;     // Threshold for MiCS6814 CO in ppm : values retreived from WHO
-const int MICS6814_NO2_THRESHOLD = 0.015;    // Threshold for MiCS6814 NO2 in ppm : values retreived from WHO
-const int MICS6814_NH3_THRESHOLD = 0.57;    // Threshold for MiCS6814 NH3 : values retreived from oizom, a NH3 monitoring sensor manufacturer
+const float MICS6814_CO_THRESHOLD = 5;     // Threshold for MiCS6814 CO in ppm : values retreived from WHO : 3.5
+const float MICS6814_NO2_THRESHOLD = 0.2;    // Threshold for MiCS6814 NO2 in ppm : values retreived from WHO : 0.015
+const float MICS6814_NH3_THRESHOLD = 0.8;    // Threshold for MiCS6814 NH3 : values retreived from oizom,
+// a NH3 monitoring sensor manufacturer : 0,57
 //For the previously calibrated CO2 sensor MQ135 we put a threshold for digital state of 1000 ppm 
 //(values retrieved from haut conseil de la santé publique)
 
@@ -45,6 +46,8 @@ void setup() {
   // Initialize serial communication
   Serial.begin(115200);
   SerialBT.begin("ESP32BT");
+  //Calibrate the MiCS6814
+  gas.calibrate();
   // Initialize pins
   pinMode(actuatorPin, OUTPUT);
   pinMode(MQ135Pin, INPUT);
@@ -89,9 +92,9 @@ void detectingState() {
     int mq135Value = digitalRead(MQ135Pin); // Once the sensor is calibrated
     //int mq135Value =  mq135_sensor.getPPM(); //To calibrate for co2 values
 
-    int mics6814Value_CO = gas.measure(CO);
-    int mics6814Value_NO2 = gas.measure(NO2);
-    int mics6814Value_NH3 = gas.measure(NH3);
+    float mics6814Value_CO = gas.measure(CO);
+    float mics6814Value_NO2 = gas.measure(NO2);
+    float mics6814Value_NH3 = gas.measure(NH3);
 
     // Log sensor readings
     Serial.print("MQ135 Value: ");
