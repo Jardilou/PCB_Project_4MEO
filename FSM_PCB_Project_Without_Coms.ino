@@ -2,9 +2,6 @@
 #include <Wire.h>
 #include "Adafruit_CCS811.h"
 #include <MQ135.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
 #include "MICS6814.h"
 
 // Define FSM states
@@ -15,7 +12,6 @@ enum State {
 };
 
 State currentState = IDLE;
-BluetoothSerial SerialBT;
 // Pin definitions
 const int actuatorPin = 48; // Passive buzzer + fan pin
 const int MQ135Pin = 13;    // MQ135 digital pin previously calibrated via the potentiometer
@@ -40,7 +36,6 @@ MICS6814 gas(MiCS6814Pin_CO, MiCS6814Pin_NO2, MiCS6814Pin_NH3);
 void setup() {
   // Initialize serial communication
   Serial.begin(115200);
-  SerialBT.begin("ESP32BT");
   // Initialize pins
   pinMode(actuatorPin, OUTPUT);
   pinMode(MQ135Pin, INPUT);
